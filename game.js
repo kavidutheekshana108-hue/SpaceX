@@ -24,8 +24,38 @@ function drawPlayer(){
     ctx.moveTo(0, -16);
     ctx.lineTo(-12, 12)
     ctx.lineTo(0, 6);
+    ctx.lineTo(12, 12);
+    ctx.closePath();
+    ctx.fill();
+
+    //Cockpit
+    ctx.fillStyle = '#7dd3fc';
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.lineTo(-6, 8)
+    ctx.lineTo(-6, 8);
     ctx.closePath();
     ctx.fill();
 
     ctx.restore();
 }
+// === Game Loop ===
+function update(){
+    player.x += (player.targetX - player.x)*0.15;
+    if (player.x<16) player.x = 16;
+    if (player.x>424) player.x = 424;
+}
+
+function draw(){
+    ctx.clearRect(0,0, canvas.clientWidth, canvas.height);
+    drawPlayer();
+}
+
+function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+// === Start ===
+loop();
