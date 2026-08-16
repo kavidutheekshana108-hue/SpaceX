@@ -173,11 +173,67 @@ function drawScore(){
     
 }
 
+
 // === Game Loop ===
 function update(){
     player.x += (player.targetX - player.x)*0.15;
     if (player.x<16) player.x = 16;
     if (player.x>424) player.x = 424;
+
+    // update stars
+    stars.forEach(star => {
+        star.y += star.speed ;
+
+        if (star.y > canvas.height){
+            // star went off the bottom! Rest it to the top.
+            star.y = 0;
+            star.x = Math.random()*canvas.width;
+        }
+    });
+
+    // --- Update Bullets (move them up) ---
+    for (let i = bullets.length - 1; i >= 0; i--){
+
+        bullets[i].y -= bullets[i].speed;
+
+        if (bullets[i].y < -10){
+            //bullets went off the top of the screen. remove it.
+            bullets.splice(i, 1);
+        }
+    }
+
+    // --- Spawn Enemies ---
+    spawnTimer++;
+    if (spawnTimer >= SPAWN_INTERVAL){
+        spawnEnemy();
+        spawnTimer = 0;
+    }
+
+    // --- Update Enemies ---
+    for (let i = enemies.length - 1; i >=0; i--){
+        enemies[i].y += enemies[i].speed;
+
+        if (enemies[i].y > canvas.height + 20){
+            // Enemy escaped over the bottom. Remove it.
+            enemies.splice(i, 1);
+        }
+    }
+
+    // --- Collision Detection : Bullets vs Enemies ---
+    for (let b = bullets.length - 1; b >= 0; b--){
+        for (let e = enemies.length - 1 ; e >= 0 ; e--){
+            // nested loops : check Every bullets against Every enemy.
+            if(checkCollision(bullets[b], enemies[e])){
+                // HIT! remove both bullet and enemy.
+                bullets.splice(b, 1);
+                enemies.splice(e, 1);
+
+                sccore += 10;   // Add 10 points for each kill.
+
+                break;
+            }
+        }
+    }
 }
 
 function draw(){
