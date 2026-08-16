@@ -28,10 +28,6 @@ let enemies = [];
 let particles = []; // New: Explosion particles
 
 
-
-// === Score ===
-let score = 0;
-
 // Setup : create initial stars ... 
 for (let i = 0; i < 50; i++) {
     stars.push({
@@ -101,8 +97,7 @@ window.addEventListener('keydown', (e) => {
 
 //  Enemy spawing
 let spawnTimer = 0;
-let spawnInterval = 60;  // Stars at 60 frams, gets faster 
-const SPAWN_INTERVAL = 30; // spawn every 60 frams  ---> made it 60 to 30
+let spawnInterval = 60;  // Starts at 60 frams, gets faster 
 
 
 function spawnEnemy() {
@@ -112,7 +107,7 @@ function spawnEnemy() {
         y: -20,
         width: 24,
         height: 24,
-        speed: 1.5 + Math.random() * 1.5
+        speed: baseSpeed + Math.random() * 1.5
     });
 }
 
@@ -176,6 +171,7 @@ function resetGame() {
     lives = 3;
     level = 1;
     spawnInterval = 60;
+    spawnTimer = 0;
     bullets = [];
     enemies = [];
     particles = [];
@@ -199,7 +195,7 @@ function drawPlayer() {
     ctx.fillStyle = '#38bdf8';
     ctx.beginPath();
     ctx.moveTo(0, -16);
-    ctx.lineTo(-12, 12)
+    ctx.lineTo(-12, 12);
     ctx.lineTo(0, 6);
     ctx.lineTo(12, 12);
     ctx.closePath();
@@ -209,7 +205,7 @@ function drawPlayer() {
     ctx.fillStyle = '#7dd3fc';
     ctx.beginPath();
     ctx.moveTo(0, -10);
-    ctx.lineTo(-6, 8)
+    ctx.lineTo(-6, 8);
     ctx.lineTo(6, 8);
     ctx.closePath();
     ctx.fill();
@@ -268,7 +264,7 @@ function drawParticles() {
     particles.forEach(p => {
         const alpha = p.life / p.maxLife; // Fade out as life decreas
         ctx.globalAlpha = alpha;
-        ctx.fill = p.color;
+        ctx.fillStyle = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -280,7 +276,8 @@ function drawUI() {
     // Score 
     ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 16px system-ui, sans-serif';
-    ctx.textAlign('Score : ' + score, 14, 26);
+    ctx.textAlign = 'left';
+    ctx.fillText('Score : ' + score, 14, 26);
 
     // High Score 
     ctx.font = '12px system-ui, sans-serif';
@@ -294,7 +291,7 @@ function drawUI() {
     ctx.fillText('Level ' + level, canvas.width - 14, 26);
 
     // Lives (Hearts❤️)
-    ctx.textAlign = 'right'
+    ctx.textAlign = 'right';
     ctx.font = '18px sans-serif';
     let hearts = '❤️'.repeat(Math.max(0, lives));
     ctx.fillText(hearts, canvas.width - 14, 48);
@@ -350,7 +347,18 @@ function drawButton(text, x, y, color) {
     // Button background
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.roundRect(rx, ry, w, h, 8);
+    // Manual rounded rectangle (works in ALL browsers)
+    const r = 8;
+    ctx.moveTo(rx + r, ry);
+    ctx.lineTo(rx + w - r, ry);
+    ctx.quadraticCurveTo(rx + w, ry, rx + w, ry + r);
+    ctx.lineTo(rx + w, ry + h - r);
+    ctx.quadraticCurveTo(rx + w, ry + h, rx + w - r, ry + h);
+    ctx.lineTo(rx + r, ry + h);
+    ctx.quadraticCurveTo(rx, ry + h, rx, ry + h - r);
+    ctx.lineTo(rx, ry + r);
+    ctx.quadraticCurveTo(rx, ry, rx + r, ry);
+    ctx.closePath();
     ctx.fill();
 
     // Button text
@@ -360,15 +368,6 @@ function drawButton(text, x, y, color) {
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x, y);
     ctx.textBaseline = 'alphabetic'; // Reset
-}
-
-
-function drawScore() {
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 16px system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('Score: ' + score, 14, 26);
-
 }
 
 
@@ -412,7 +411,7 @@ function update() {
 
     // --- Spawn Enemies ---
     spawnTimer++;
-    if (spawnTimer >= SPAWN_INTERVAL) {
+    if (spawnTimer >= spawnInterval) {
         spawnEnemy();
         spawnTimer = 0;
     }
@@ -463,7 +462,7 @@ function update() {
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
-        p.y += p.py;
+        p.y += p.vy;
         p.life--;
 
         if (p.life <= 0) {
@@ -479,7 +478,6 @@ function draw() {
     drawParticles(); // Draw particles behind bullets/enemies
     drawBullets(); // Middle layer 
     drawEnemies(); // Middle layer 
-    // drawScore(); // UI layer(on top of everything)
     drawPlayer(); //Foreground layer (player on top)
     drawUI();
 
