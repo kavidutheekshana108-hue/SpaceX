@@ -18,7 +18,7 @@ const player = {
  let enemies = [];
 
  // === Score ===
- let sccore = 0;
+ let score = 0;
 
  // Setup : create initial stars ... 
  for(let i = 0; i < 50; i++){
@@ -26,6 +26,7 @@ const player = {
         x:Math.random() * canvas.width,
         y:Math.random()*canvas.height,
         size:Math.random()* 2 + 0.5,
+        speed : Math.random()*0.1 + 0.2 
     });
  }
 
@@ -34,7 +35,7 @@ canvas.addEventListener('mousemove', (e) => {const rect = canvas.getBoundingClie
 
 // Input : Shooting(click and spacebar)
 let lastShotTime = 0; //Timestamp of the last shot
-const SHOOT_COOLDOWN = 200; // Milliseconds between shots(0.2s)
+const SHOOT_COOLDOWN = 100; // Milliseconds between shots(0.2s) --- > 200 to 100
 
 function shoot(){
     const now = Date.now();
@@ -63,7 +64,7 @@ window.addEventListener('keydown', (e) => {
 
 //  Enemy spawing
 let spawnTimer = 0;
-const SPAWN_INTERVAL = 60; // spawn every 60 frams
+const SPAWN_INTERVAL = 30; // spawn every 60 frams  ---> made it 60 to 30
 
 
 function spawnEnemy(){
@@ -111,7 +112,7 @@ function drawPlayer(){
     ctx.beginPath();
     ctx.moveTo(0, -10);
     ctx.lineTo(-6, 8)
-    ctx.lineTo(-6, 8);
+    ctx.lineTo(6, 8);
     ctx.closePath();
     ctx.fill();
 
@@ -169,7 +170,7 @@ function drawScore(){
     ctx.fillStyle= '#e2e8f0';
     ctx.font = 'bold 16px system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('Score: ' + ScrollTimeline, 14, 26);
+    ctx.fillText('Score: ' + score, 14, 26);
     
 }
 
@@ -228,7 +229,7 @@ function update(){
                 bullets.splice(b, 1);
                 enemies.splice(e, 1);
 
-                sccore += 10;   // Add 10 points for each kill.
+                score += 10;   // Add 10 points for each kill.
 
                 break;
             }
@@ -237,9 +238,16 @@ function update(){
 }
 
 function draw(){
-    ctx.clearRect(0,0, canvas.clientWidth, canvas.height);
-    drawPlayer();
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    
+    drawStars(); // Background layer
+    drawBullets(); // Middle layer 
+    drawEnemies(); // Middle layer 
+    drawScore(); // UI layer(on top of everything)
+    drawPlayer(); //Foreground layer (player on top)
 }
+
+// === Game Loop ===
 
 function loop(){
     update();
