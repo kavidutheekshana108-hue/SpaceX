@@ -2,6 +2,13 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// === Game State ===
+let gameState = 'start'; // 'start' | 'playing' | 'gameover'
+let score = 0 ;
+let highScore = 0 ;
+let lives = 3 ;
+let level = 1 ;
+
 // === Player State == 
 
 const player = {
@@ -9,13 +16,18 @@ const player = {
     y:320,
     targetX: 220,
     width: 24,
-    height:28
+    height:28,
+    invincible: false, // Brief invincibility after getting hit
+    invincibleTimer : 0
 };
 
 // === Arrays - The secret to multiple objects ===
  let stars = [];
  let bullets = [];
  let enemies = [];
+ let particles = []; // New: Explosion particles
+
+  
 
  // === Score ===
  let score = 0;
@@ -26,16 +38,24 @@ const player = {
         x:Math.random() * canvas.width,
         y:Math.random()*canvas.height,
         size:Math.random()* 2 + 0.5,
-        speed : Math.random()*0.1 + 0.2 
+        speed : Math.random()*0.8 + 0.2      // Star speed .........
     });
  }
 
 // Input : Mouse movement
-canvas.addEventListener('mousemove', (e) => {const rect = canvas.getBoundingClientRect(); player.targetX = e.clientX - rect.left;});
+canvas.addEventListener('mousemove', (e) => {
+    if (gameState !== 'playing') return;
+    const rect = canvas.getBoundingClientRect(); player.targetX = e.clientX - rect.left;});
+canvas.addEventListener('mousedown', () => {
+    if (gameState === 'playing')  shoot();
+});
 
 // Input : Shooting(click and spacebar)
+
+// -- Timing --
 let lastShotTime = 0; //Timestamp of the last shot
-const SHOOT_COOLDOWN = 100; // Milliseconds between shots(0.2s) --- > 200 to 100
+const SHOOT_COOLDOWN = 180; // Milliseconds between shots(0.2s) --- > 200 to 100 --> 180
+
 
 function shoot(){
     const now = Date.now();
@@ -64,6 +84,7 @@ window.addEventListener('keydown', (e) => {
 
 //  Enemy spawing
 let spawnTimer = 0;
+let spawnInterval = 60;  // Stars at 60 frams, gets faster 
 const SPAWN_INTERVAL = 30; // spawn every 60 frams  ---> made it 60 to 30
 
 
