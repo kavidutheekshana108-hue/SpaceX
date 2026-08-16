@@ -113,7 +113,7 @@ function spawnEnemy() {
 
 // --- Particle Explosions --- 
 function createExplosion(x, y, color) {
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 30; i++) {
         const angle = Math.random() * Math.PI * 2; // Random direction
         const speed = Math.random() * 3 + 1;
         particles.push({
@@ -440,7 +440,7 @@ function update() {
             // nested loops : check Every bullets against Every enemy.
             if (checkCollision(bullets[b], enemies[e])) {
                 // creat explosion at enemy position
-                createExplosion(enemies[e].x, enemies[e].y, '#fbbf24');
+                createExplosion(enemies[e].x, enemies[e].y, '#f80f0f');
 
                 // HIT! remove both bullet and enemy.
                 bullets.splice(b, 1);
