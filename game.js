@@ -26,7 +26,7 @@ let stars = [];
 let bullets = [];
 let enemies = [];
 let particles = []; // New: Explosion particles
-
+let powerups = []; // Green orbs that give +1 life
 
 // Setup : create initial stars ... 
 for (let i = 0; i < 50; i++) {
@@ -260,6 +260,39 @@ function drawEnemies() {
     });
 }
 
+function drawPowerups(){
+    powerups.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+
+        //Outer glow
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.3)'; // Green glow
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius + 4, 0, Math.PI*2);
+        ctx.fill();
+
+        // Inner orb
+        ctx.fillStyle = '#22c55e'; // green 
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius, 0, Math.PI*2);
+        ctx.fill();
+
+        //White shine dot 
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-3, -3, 3, 0, Math.PI*2);
+        ctx.fill();
+
+        //Shield icon(+)
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+', 0, 0);
+
+        ctx.restore();
+    });
+}
+
 function drawParticles() {
     particles.forEach(p => {
         const alpha = p.life / p.maxLife; // Fade out as life decreas
@@ -416,6 +449,16 @@ function update() {
         spawnTimer = 0;
     }
 
+    // --- Spawn Power-up (rare chance) ---
+    if (Math.random() < 0.002) { // 0.2% chance per frame(~1 every 8 sec)
+        powerups.push({
+            x: 20 + Math.random()* (canvas.width - 40),
+            y: -20,
+            radius : 10,
+            speed : 1.5
+        });
+    }
+
     // --- Update Enemies ---
     for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].y += enemies[i].speed;
@@ -431,6 +474,28 @@ function update() {
             enemies.splice(i, 1);
             playerHit();
             continue;
+        }
+    }
+
+    // --- Update Power-ups ---
+    for (let i = powerups.length - 1; i >= 0; i--){
+        let p = powerups[i];
+        p.y += p.speed;
+
+        // Off screen 
+        if (p.y > canvas.height + 20){
+            powerups.splice(i, 1);
+            continue;
+        }
+
+        // Player collects power-ups
+        const dx = p.x - player.x;
+        const dy = p.y - player.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < p.radius + 16){ // 16 = half ship size
+            lives++; //+1 life!
+            powerups.splice(i,1);
+            createExplosion(p.x, p.y, '#22c55e');  // Green sparcle
         }
     }
 
@@ -478,6 +543,7 @@ function draw() {
     drawParticles(); // Draw particles behind bullets/enemies
     drawBullets(); // Middle layer 
     drawEnemies(); // Middle layer 
+    drawPowerups(); //
     drawPlayer(); //Foreground layer (player on top)
     drawUI();
 
