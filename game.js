@@ -28,6 +28,74 @@ let enemies = [];
 let particles = []; // New: Explosion particles
 let powerups = []; // Green orbs that give +1 life
 
+// === Power-up Timers ===
+let rapidFireTimer = 0; // Frames remaining for rapid fire
+let shieldTimer = 0; // Frames remaining for shield power-up
+
+// === Audio Contex for Sound Effects ---
+let audioCtx = null;
+
+function initAudio(){
+    if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playSound(type){
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'shoot') { // Short high-pitched beep
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.05);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+
+    } else if (type === 'explosion'){   // Noise brust
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);  
+
+    } else if(type === 'powerup'){ // Ascending happy tone
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.linerRampToValueAtTime(800, now + 0.15);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linerRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+
+    } else if(type === 'gameover'){ // Sad decending tone
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.linerRampToValueAtTime(100, now + 0.5);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linerRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.15);
+
+    } else if (type === 'bomb'){   // Deep boom
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3); 
+    }    
+}
+
 // Setup : create initial stars ... 
 for (let i = 0; i < 50; i++) {
     stars.push({
@@ -70,12 +138,14 @@ canvas.addEventListener('touchstart', (e) => {
 // -- Timing --
 let lastShotTime = 0; //Timestamp of the last shot
 const SHOOT_COOLDOWN = 180; // Milliseconds between shots(0.2s) --- > 200 to 100 --> 180
-
+const RAPID_COOLDOWN = 60;  // Faster when rapid fire active
 
 function shoot() {
     const now = Date.now();
     if (now - lastShotTime < SHOOT_COOLDOWN) return; // too soon! ignore this shot. 
     lastShotTime = now;
+
+    playSound('shoot'); 
 
     //Create a new bullet object and add it to the bullets array.
     bullets.push({
@@ -450,12 +520,12 @@ function update() {
     }
 
     // --- Spawn Power-up (rare chance) ---
-    if (Math.random() < 0.002) { // 0.2% chance per frame(~1 every 8 sec)
+    if (Math.random() < 0.001) { // 0.1% chance per frame(~1 every 8 sec)
         powerups.push({
             x: 20 + Math.random()* (canvas.width - 40),
             y: -20,
             radius : 10,
-            speed : 1.5
+            speed : 1.6
         });
     }
 
